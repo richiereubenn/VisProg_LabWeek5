@@ -19,36 +19,48 @@ class Soal1ViewModel : ViewModel() {
         random()
     }
 
-    fun random(){
-        val randomValue = random.nextInt(1, 11)
+    fun random() {
+        val randomValue = (1..10).random()
         _uiState.update { current -> current.copy(random = randomValue) }
     }
 
-    fun reduceChance(){
-        val chance = _uiState.value.chance - 1
+    fun reduceChance() {
+        val chance = _uiState.value.chance + 1
         _uiState.update { current -> current.copy(chance = chance) }
     }
 
-    fun scoreIncrease(){
-        val score = _uiState.value.chance + 1
+    fun scoreIncrease() {
+        val score = _uiState.value.score + 1
         _uiState.update { current -> current.copy(score = score) }
     }
 
-    fun gameOver(){
+    fun answer(value: Int) {
+        _uiState.update { current -> current.copy(answer = value) }
+    }
+
+    fun gameOver() {
         _uiState.update { current -> current.copy(gameOver = true) }
     }
 
-    fun play(value: Int){
-        if(_uiState.value.chance != 0){
-            if(_uiState.value.random == value){
-                reduceChance()
-                scoreIncrease()
-            }else{
-                reduceChance()
-            }
-        }else{
-            gameOver()
-        }
+    fun gameReset(){
+        _uiState.update { current -> current.copy(chance = 0) }
+        _uiState.update { current -> current.copy(score = 0) }
+        _uiState.update { current -> current.copy(gameOver = false) }
         random()
+    }
+
+    fun play() {
+        if (_uiState.value.random == _uiState.value.answer) {
+            scoreIncrease()
+            random()
+            if (_uiState.value.chance == 3 || _uiState.value.score == 3) {
+                gameOver()
+            }
+        } else {
+            reduceChance()
+            if (_uiState.value.chance == 3 || _uiState.value.score == 3) {
+                gameOver()
+            }
+        }
     }
 }

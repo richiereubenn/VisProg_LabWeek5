@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -49,13 +51,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Soal1(soal1: Soal1ViewModel = Soal1ViewModel()) {
+fun Soal1(soal1: Soal1ViewModel = viewModel()) {
     val gameModel by soal1.uiState.collectAsState()
-    var number by remember { mutableStateOf(" ") }
+    var guess by rememberSaveable { mutableStateOf("") }
+    var gameOver by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -64,12 +68,13 @@ fun Soal1(soal1: Soal1ViewModel = Soal1ViewModel()) {
     ) {
         Text(
             text = "Guess the Number",
-            fontSize = 20.sp
+            fontSize = 25.sp,
+            fontWeight = FontWeight.Bold
         )
         Card(
-            modifier = Modifier.padding(horizontal = 30.dp),
+            modifier = Modifier.padding(horizontal = 30.dp).padding(top = 10.dp),
             colors = CardDefaults.elevatedCardColors(
-                    containerColor = Color.LightGray
+                    containerColor = Color(0xFFD2DBF1)
             )
         ) {
             Box(
@@ -82,7 +87,7 @@ fun Soal1(soal1: Soal1ViewModel = Soal1ViewModel()) {
                     color = Color.White,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .background(Color.Blue, shape = RoundedCornerShape(10.dp))
+                        .background(Color(0XFF0031B8), shape = RoundedCornerShape(10.dp))
                         .padding(8.dp)
                 )
                 Column(
@@ -107,38 +112,83 @@ fun Soal1(soal1: Soal1ViewModel = Soal1ViewModel()) {
                         fontSize = 15.sp
                     )
                     OutlinedTextField(
-                        value = number,
+                        value = guess,
                         onValueChange = {
-                            number = it
+                            guess = it
                         },
                         keyboardOptions = KeyboardOptions.Default.copy(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Next
                         ),
-                        label = { Text("Enter your guess") },
-                        modifier = Modifier.padding(top = 16.dp)
+                        label = { Text("Enter your guess")},
+                        modifier = Modifier.padding(top = 16.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = Color(0XFF0031B8),
+                            textColor = Color.DarkGray,
+                        )
                     )
                 }
             }
         }
         Button(
             onClick = {
-                soal1.play(number.toInt())
+                soal1.answer(guess.toInt())
+                soal1.play()
+                guess = ""
             },
+            enabled = guess.isNotBlank(),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 30.dp, vertical = 16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Blue
+                containerColor = Color(0xFF0031B8)
             ),
         ) {
             Text(
                 text = "Submit",
             )
-
         }
+        if(gameModel.gameOver){
+            AlertDialog(
+                onDismissRequest = {
+                    gameOver = false
+                },
+                containerColor = Color(0xFFD2DBF1),
+                title = { Text("GameOver!") },
+                text = {
+                    Text("Your Score : ${gameModel.score}")
+                },
+                confirmButton = {
+                    Row {
+                        Button(
+                            onClick = {
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF0031B8)
+                            )
+                        ) {
+                            Text(text = "Exit")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                soal1.gameReset()
+                                gameOver = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF0031B8)
+                            )
+                        ) {
+                            Text(text = "Play Again")
+                        }
+                    }
+                }
+            )
+        }
+
     }
 }
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
